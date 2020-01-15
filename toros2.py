@@ -90,10 +90,12 @@ rclcpp_subs = [
     Sub(
         pattern = 'ros::Duration',
         replace = lambda m: 'rclcpp::Duration',
+        save = False,
     ),
     Sub(
         pattern = 'ros::Time',
         replace = lambda m: 'rclcpp::Time',
+        save = False,
     ),
 ]
 
