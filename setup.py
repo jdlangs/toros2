@@ -8,6 +8,7 @@ setup(
     py_modules=['toros2'],
     install_requires=[
         'Click',
+        'inflection',
     ],
     entry_points='''
         [console_scripts]
