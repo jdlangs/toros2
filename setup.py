@@ -5,7 +5,8 @@ from setuptools import setup, find_packages
 setup(
     name='toros2',
     version='0.1',
-    packages=find_packages(),
+    package_dir={'': 'src'},
+    packages=find_packages('src'),
     install_requires=[
         'Click',
         'inflection',

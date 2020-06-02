@@ -1,3 +1,7 @@
+import click
+import collections
+import re
+
 ROSInterface = collections.namedtuple('ROSInterface', ['package', 'name', 'type'])
 
 def identify_interfaces(data: str):

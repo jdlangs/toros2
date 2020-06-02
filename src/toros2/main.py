@@ -6,87 +6,11 @@ import re
 import os
 import yaml
 
+from .substitute import Sub, apply_sub
 from .interfaces import identify_interfaces
+from .logging import logger_expr, logging_subs
 
-Sub = collections.namedtuple('Switch', ['pattern', 'replace', 'save'])
-
-LOGGER = ''
 CACHEFILE = '.toros2.cache'
-
-logging_subs = [
-    #printf vanilla: ROS_DEBUG({args...}) -> RCLCPP_DEBUG({logger}, {args...})
-    Sub(
-        pattern = r'ROS_([A-Z]+)\((.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}({logger_expr()}, {m.group(2)});',
-        save = False,
-    ),
-    #printf cond: ROS_INFO_COND({condition}, {args...}) -> RCLCPP_INFO_EXPRESSION({logger}, {condition}, {args...})
-    Sub(
-        pattern = r'ROS_([A-Z]+)_COND\((.*?),(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}_EXPRESSION({logger_expr()}, {m.group(2)},{m.group(3)});',
-        save = False,
-    ),
-    #printf once: ROS_INFO_ONCE({args...}) -> RCLCPP_INFO_ONCE({logger}, {args...})
-    Sub(
-        pattern = r'ROS_([A-Z]+)_ONCE\((.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}_ONCE({logger_expr()}, {m.group(2)});',
-        save = False,
-    ),
-    #printf throttle: ROS_INFO_THROTTLE(period, {args...}) -> RCLCPP_INFO({logger}, {args...})
-    Sub(
-        pattern = r'ROS_([A-Z]+)_THROTTLE\(.*?,(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}({logger_expr()}, {m.group(2)});',
-        save = False,
-    ),
-    #printf delayed throttle: ROS_INFO_DELAYED_THROTTLE(period, {args...}) -> RCLCPP_INFO({logger}, {args...})
-    Sub(
-        pattern = r'ROS_([A-Z]+)_DELAYED_THROTTLE\(.*?,(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}({logger_expr()}, {m.group(2)});',
-        save = False,
-    ),
-    #printf filter: ROS_INFO_FILTER(filter, {args...}) -> RCLCPP_INFO({logger}, {args...})
-    Sub(
-        pattern = r'ROS_([A-Z]+)_FILTER\(.*?,(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}({logger_expr()}, {m.group(2)});',
-        save = False,
-    ),
-    #stream vanilla
-    Sub(
-        pattern = r'ROS_([A-Z]+)_STREAM\((.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM({logger_expr()}, {m.group(2)});',
-        save = False,
-    ),
-    #stream cond
-    Sub(
-        pattern = r'ROS_([A-Z]+)_STREAM_COND\((.*?),(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM_EXPRESSION({logger_expr()}, {m.group(2)},{m.group(3)});',
-        save = False,
-    ),
-    #stream once
-    Sub(
-        pattern = r'ROS_([A-Z]+)_STREAM_ONCE\((.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM_ONCE({logger_expr()}, {m.group(2)});',
-        save = False,
-    ),
-    #stream throttle
-    Sub(
-        pattern = r'ROS_([A-Z]+)_STREAM_THROTTLE\(.*?,(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM_THROTTLE({logger_expr()}, {m.group(2)});',
-        save = False,
-    ),
-    #stream delayed throttle
-    Sub(
-        pattern = r'ROS_([A-Z]+)_STREAM_DELAYED_THROTTLE\(.*?,(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM_THROTTLE({logger_expr()}, {m.group(2)});',
-        save = False,
-    ),
-    #stream filter
-    Sub(
-        pattern = r'ROS_([A-Z]+)_STREAM_FILTER\(.*?,(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM({logger_expr()}, {m.group(2)});',
-        save = False,
-    ),
-]
 
 rclcpp_subs = [
     Sub(
@@ -100,42 +24,6 @@ rclcpp_subs = [
         save = False,
     ),
 ]
-
-def logger_expr():
-    global LOGGER
-    if len(LOGGER) == 0:
-        LOGGER = click.prompt('Enter expression to use for logger', type=str, default=LOGGER)
-    return LOGGER
-
-def apply_sub(data: str, sub: Sub, cache: dict, *, confirm=False):
-    print('Checking for pattern: ', sub.pattern)
-    def print_and_replace(m):
-        matched = m.group(0)
-        msgwidth = 20
-        print(f"  {'pattern found':<{msgwidth}}: '{matched}'")
-        repl = ''
-        if matched in cache:
-            repl = cache[matched]
-            print(f"  {'cached replacement':<{msgwidth}}: '{repl}'")
-        else:
-            repl = sub.replace(m)
-            print(f"  {'replacing with':<{msgwidth}}: '{repl}'")
-        action = 'y'
-        if confirm:
-            action = click.prompt('yes/no/rewrite', default='y', type=click.Choice(['y','n','r']))
-        if action == 'y':
-            if sub.save:
-                cache[matched] = repl
-            return repl
-        elif action == 'n':
-            return None
-        elif action == 'r':
-            newrepl = click.prompt('  Input alternate replacement:', type=str)
-            if sub.save:
-                cache[matched] = newrepl
-
-    data = re.sub(sub.pattern, print_and_replace, data)
-    return data
 
 def substitutions():
     """
@@ -156,7 +44,7 @@ def substitutions():
     all_subs = list()
     all_subs.append(include_sub)
     all_subs.append(msg_sub)
-    all_subs.extend(logging_subs)
+    all_subs.extend(logging_subs())
     all_subs.extend(rclcpp_subs)
     return all_subs
 
