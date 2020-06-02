@@ -105,37 +105,6 @@ def logger_expr():
         LOGGER = click.prompt('Enter expression to use for logger', type=str, default=LOGGER)
     return LOGGER
 
-def stream_to_printf(contents: str):
-    elems = map(lambda s: s.strip(), contents.split('<<')) # whitespace cleaned list of contents separated by '<<'
-    exprs = list()
-    printf_list = list()
-    for elem in elems:
-        # non-string items turn into a format specifier, string items are kept as-is
-        if not (elem.startswith('"') and elem.endswith('"')):
-            exprs.append(elem)
-            printf_list.append(guess_format_type(elem))
-        else:
-            printf_list.append(elem[1:-1])
-
-    fmt_str = ''.join(printf_list)
-    fmt_args = ''.join(map(lambda s: ', '+s, exprs))
-    printf_contents = '"{}"{}'.format(fmt_str, fmt_args)
-    return printf_contents
-
-def guess_format_type(expr: str):
-    try:
-        int(expr)
-        return '%i'
-    except ValueError:
-        pass
-    try:
-        float(expr)
-        return '%f'
-    except ValueError:
-        pass
-    fmt = click.prompt(f"    Enter format specified for expression '{expr}'", type=str, default='%s')
-    return fmt
-
 def apply_sub(data: str, sub: Sub, cache: dict, *, confirm=False):
     print('Checking for pattern: ', sub.pattern)
     def print_and_replace(m):
