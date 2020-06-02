@@ -51,37 +51,37 @@ logging_subs = [
     #stream vanilla
     Sub(
         pattern = r'ROS_([A-Z]+)_STREAM\((.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}({logger_expr()}, {stream_to_printf(m.group(2))});',
+        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM({logger_expr()}, {m.group(2)});',
         save = False,
     ),
     #stream cond
     Sub(
         pattern = r'ROS_([A-Z]+)_STREAM_COND\((.*?),(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}_EXPRESSION({logger_expr()}, {m.group(2)},{stream_to_printf(m.group(3))});',
+        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM_EXPRESSION({logger_expr()}, {m.group(2)},{m.group(3)});',
         save = False,
     ),
     #stream once
     Sub(
         pattern = r'ROS_([A-Z]+)_STREAM_ONCE\((.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}_ONCE({logger_expr()}, {stream_to_printf(m.group(2))});',
+        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM_ONCE({logger_expr()}, {m.group(2)});',
         save = False,
     ),
     #stream throttle
     Sub(
         pattern = r'ROS_([A-Z]+)_STREAM_THROTTLE\(.*?,(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}({logger_expr()}, {stream_to_printf(m.group(2))});',
+        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM_THROTTLE({logger_expr()}, {m.group(2)});',
         save = False,
     ),
     #stream delayed throttle
     Sub(
         pattern = r'ROS_([A-Z]+)_STREAM_DELAYED_THROTTLE\(.*?,(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}({logger_expr()}, {stream_to_printf(m.group(2))});',
+        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM_THROTTLE({logger_expr()}, {m.group(2)});',
         save = False,
     ),
     #stream filter
     Sub(
         pattern = r'ROS_([A-Z]+)_STREAM_FILTER\(.*?,(.*)\);?',
-        replace = lambda m: f'RCLCPP_{m.group(1)}({logger_expr()}, {stream_to_printf(m.group(2))});',
+        replace = lambda m: f'RCLCPP_{m.group(1)}_STREAM({logger_expr()}, {m.group(2)});',
         save = False,
     ),
 ]
